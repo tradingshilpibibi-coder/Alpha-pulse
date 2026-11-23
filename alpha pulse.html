@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlphaPulse — Trading Community</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #0b0f17;
+      color: #e2e8f0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+      backdrop-filter: blur(12px);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
+
+  <!-- Top Navigation -->
+  <header class="sticky top-0 z-40 border-b border-slate-800/80 bg-[#0b0f17]/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <!-- Brand -->
+      <div class="flex items-center gap-2.5 shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <i data-lucide="activity" class="w-5 h-5 text-slate-950 stroke-[2.5]"></i>
+        </div>
+        <div>
+          <span class="font-bold text-lg tracking-tight text-white">AlphaPulse</span>
+          <span class="hidden sm:inline-block ml-1.5 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">Live</span>
+        </div>
+      </div>
+
+      <!-- Desktop Nav Tabs -->
+      <nav id="desktop-nav" class="hidden md:flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <button type="button" data-view="feed" class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors bg-slate-800 text-white">Feed</button>
+        <button type="button" data-view="watchlist" class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-white">Watchlist</button>
+        <button type="button" data-view="leaderboard" class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-white">Leaderboard</button>
+        <button type="button" data-view="rooms" class="nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-white">Rooms</button>
+      </nav>
+
+      <!-- Search & CTA -->
+      <div class="flex items-center gap-2.5 flex-1 md:flex-initial justify-end max-w-md">
+        <div class="relative flex-1 md:w-56">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search ticker, trader..."
+            class="w-full pl-9 pr-3 py-1.5 text-sm rounded-xl bg-slate-900 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40"
+          />
+        </div>
+        <button
+          type="button"
+          id="open-compose-btn"
+          class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-sm transition-colors shadow-lg shadow-emerald-500/20"
+        >
+          <i data-lucide="plus" class="w-4 h-4 stroke-[2.5]"></i>
+          <span class="hidden sm:inline">Post Idea</span>
+        </button>
+        <button
+          type="button"
+          id="mobile-menu-btn"
+          class="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
+          aria-label="Toggle navigation"
+        >
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Nav Drawer -->
+    <div id="mobile-nav" class="hidden md:hidden border-t border-slate-800/80 px-4 py-2 bg-[#0b0f17]">
+      <div class="grid grid-cols-4 gap-1.5">
+        <button type="button" data-view="feed" class="nav-tab px-2 py-2 rounded-lg text-xs font-medium text-center bg-slate-800 text-white">Feed</button>
+        <button type="button" data-view="watchlist" class="nav-tab px-2 py-2 rounded-lg text-xs font-medium text-center text-slate-400 hover:text-white">Watchlist</button>
+        <button type="button" data-view="leaderboard" class="nav-tab px-2 py-2 rounded-lg text-xs font-medium text-center text-slate-400 hover:text-white">Leaders</button>
+        <button type="button" data-view="rooms" class="nav-tab px-2 py-2 rounded-lg text-xs font-medium text-center text-slate-400 hover:text-white">Rooms</button>
+      </div>
+    </div>
+
+    <!-- Market Ticker Strip -->
+    <div class="border-t border-slate-800/60 bg-slate-950/60">
+      <div id="ticker-strip" class="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center gap-3 overflow-x-auto no-scrollbar">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left / Center Primary Column -->
+      <section class="lg:col-span-8 space-y-5">
+
+        <!-- VIEW: FEED -->
+        <div id="view-feed" class="view-section space-y-4">
+          <!-- Filter & Sort Bar -->
+          <div class="glass-card rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div id="filter-pills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+              <button type="button" data-filter="ALL" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">All Ideas</button>
+              <button type="button" data-filter="LONG" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-900/80 border border-slate-800">Bullish</button>
+              <button type="button" data-filter="SHORT" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-900/80 border border-slate-800">Bearish</button>
+              <button type="button" data-filter="Stocks" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-900/80 border border-slate-800">Stocks</button>
+              <button type="button" data-filter="Crypto" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-900/80 border border-slate-800">Crypto</button>
+              <button type="button" data-filter="ETF" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-900/80 border border-slate-800">ETF</button>
+              <button type="button" data-filter="SAVED" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-900/80 border border-slate-800">Saved (<span id="saved-count">0</span>)</button>
+            </div>
+            <div class="flex items-center gap-2 ml-auto">
+              <span class="text-xs text-slate-400">Sort:</span>
+              <select id="sort-select" class="text-xs font-medium bg-slate-900 border border-slate-800 text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-emerald-500/60">
+                <option value="votes">Top Voted</option>
+                <option value="newest">Newest</option>
+                <option value="comments">Most Discussed</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Active Ticker Filter Banner (shown when filtered by clicking a ticker) -->
+          <div id="ticker-filter-banner" class="hidden items-center justify-between px-4 py-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/25 text-xs text-cyan-200">
+            <span>Showing ideas for <strong id="ticker-filter-label" class="font-bold"></strong></span>
+            <button type="button" id="clear-ticker-filter" class="font-semibold text-cyan-300 hover:text-white underline">Clear filter</button>
+          </div>
+
+          <!-- Feed List -->
+          <div id="ideas-list" class="space-y-4">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- VIEW: WATCHLIST -->
+        <div id="view-watchlist" class="view-section hidden space-y-4">
+          <div class="glass-card rounded-2xl p-5">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 class="text-lg font-bold text-white">Market Watchlist</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Live reference quotes (Nov 23, 2026). Click a row to inspect its chart or filter ideas.</p>
+              </div>
+              <span id="watchlist-count-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">4 tracked</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
+                    <th class="py-2.5 pr-4">Asset</th>
+                    <th class="py-2.5 px-3 text-right">Price</th>
+                    <th class="py-2.5 px-3 text-right">Change</th>
+                    <th class="py-2.5 px-3 text-right hidden sm:table-cell">Range</th>
+                    <th class="py-2.5 pl-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="watchlist-tbody" class="divide-y divide-slate-800/70 text-sm">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW: LEADERBOARD -->
+        <div id="view-leaderboard" class="view-section hidden space-y-4">
+          <div class="glass-card rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h2 class="text-lg font-bold text-white">Top Community Traders</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Ranked by verified 90-day risk-adjusted return & win rate</p>
+              </div>
+              <span class="text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">Q4 2026 Season</span>
+            </div>
+            <div id="leaderboard-list" class="space-y-3">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW: ROOMS -->
+        <div id="view-rooms" class="view-section hidden space-y-4">
+          <div class="glass-card rounded-2xl overflow-hidden grid grid-cols-1 sm:grid-cols-12 min-h-[480px]">
+            <!-- Room List -->
+            <div class="sm:col-span-4 border-b sm:border-b-0 sm:border-r border-slate-800 bg-slate-900/40 p-3 space-y-1.5">
+              <div class="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Trading Channels</div>
+              <div id="rooms-list" class="space-y-1">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+            <!-- Active Room Chat -->
+            <div class="sm:col-span-8 flex flex-col justify-between">
+              <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                  <h3 id="active-room-name" class="text-sm font-bold text-white">#nvda-semis</h3>
+                  <p id="active-room-desc" class="text-xs text-slate-400">Semiconductors, AI capex & earnings flow</p>
+                </div>
+                <span class="inline-flex items-center gap-1.5 text-xs text-emerald-400">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span id="active-room-members">142 online</span>
+                </span>
+              </div>
+              <div id="room-messages" class="flex-1 p-4 space-y-3 overflow-y-auto max-h-80">
+                <!-- Populated by JS -->
+              </div>
+              <form id="room-chat-form" class="p-3 border-t border-slate-800 flex items-center gap-2 bg-slate-950/40">
+                <input
+                  id="room-chat-input"
+                  type="text"
+                  placeholder="Share a quick level or chart note..."
+                  class="flex-1 px-3.5 py-2 text-sm rounded-xl bg-slate-900 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500/60"
+                />
+                <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-sm transition-colors">
+                  Send
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Sidebar: Chart, Sentiment Poll & Quick Stats -->
+      <aside class="lg:col-span-4 space-y-5 lg:sticky lg:top-32">
+
+        <!-- Active Ticker Chart Card -->
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="chart-symbol" class="text-base font-bold text-white">NVDA</span>
+                <span id="chart-name" class="text-xs text-slate-400">NVIDIA Corp.</span>
+              </div>
+              <div class="flex items-baseline gap-2 mt-1">
+                <span id="chart-price" class="text-2xl font-bold font-mono text-white">$135.71</span>
+                <span id="chart-change" class="text-xs font-semibold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400">-7.04%</span>
+              </div>
+            </div>
+            <div id="chart-ticker-pills" class="flex flex-wrap gap-1 justify-end">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <div class="relative h-56 w-full">
+            <canvas id="priceChart"></canvas>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800/80 text-xs">
+            <div class="bg-slate-900/70 rounded-xl p-2.5">
+              <span class="text-slate-400 block text-[11px]">Reference High</span>
+              <span id="chart-high" class="font-mono font-semibold text-slate-200">$142.41</span>
+            </div>
+            <div class="bg-slate-900/70 rounded-xl p-2.5">
+              <span class="text-slate-400 block text-[11px]">Reference Low</span>
+              <span id="chart-low" class="font-mono font-semibold text-slate-200">$125.14</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Community Sentiment Poll -->
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+              <i data-lucide="bar-chart-2" class="w-4 h-4 text-cyan-400"></i>
+              <span><span id="poll-symbol">NVDA</span> Sentiment Poll</span>
+            </h3>
+            <span id="poll-total" class="text-xs text-slate-400">0 votes</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="h-3 w-full rounded-full bg-slate-800 overflow-hidden flex">
+              <div id="poll-bull-bar" class="bg-emerald-500 transition-all duration-300" style="width: 64%"></div>
+              <div id="poll-bear-bar" class="bg-rose-500 transition-all duration-300" style="width: 36%"></div>
+            </div>
+            <div class="flex justify-between text-xs font-semibold">
+              <span class="text-emerald-400">Bullish <span id="poll-bull-pct">64%</span></span>
+              <span class="text-rose-400">Bearish <span id="poll-bear-pct">36%</span></span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <button type="button" id="vote-bull-btn" class="py-2 px-3 rounded-xl text-xs font-semibold border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 transition-colors flex items-center justify-center gap-1.5">
+              <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
+              Bullish
+            </button>
+            <button type="button" id="vote-bear-btn" class="py-2 px-3 rounded-xl text-xs font-semibold border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 transition-colors flex items-center justify-center gap-1.5">
+              <i data-lucide="trending-down" class="w-3.5 h-3.5"></i>
+              Bearish
+            </button>
+          </div>
+        </div>
+
+        <!-- Mini Leaderboard Preview -->
+        <div class="glass-card rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+              <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
+              <span>Top Analysts</span>
+            </h3>
+            <button type="button" id="view-all-leaders-btn" class="text-xs font-medium text-emerald-400 hover:text-emerald-300">View all</button>
+          </div>
+          <div id="sidebar-leaders" class="space-y-2.5">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <!-- Post Trade Idea Modal -->
+  <div id="compose-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="glass-card w-full max-w-lg rounded-2xl p-5 sm:p-6 shadow-2xl border border-slate-700/80">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-white">Post Trade Idea</h2>
+        <button type="button" id="close-compose-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="compose-form" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="idea-ticker" class="block text-xs font-medium text-slate-300 mb-1">Ticker</label>
+            <input id="idea-ticker" type="text" required maxlength="10" placeholder="e.g. NVDA" class="w-full px-3 py-2 text-sm uppercase rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label for="idea-direction" class="block text-xs font-medium text-slate-300 mb-1">Direction</label>
+            <select id="idea-direction" class="w-full px-3 py-2 text-sm rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-emerald-500">
+              <option value="LONG">LONG (Bullish)</option>
+              <option value="SHORT">SHORT (Bearish)</option>
+            </select>
+          </div>
+          <div>
+            <label for="idea-category" class="block text-xs font-medium text-slate-300 mb-1">Market</label>
+            <select id="idea-category" class="w-full px-3 py-2 text-sm rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-emerald-500">
+              <option value="Stocks">Stocks</option>
+              <option value="Crypto">Crypto</option>
+              <option value="ETF">ETF</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label for="idea-entry" class="block text-xs font-medium text-slate-300 mb-1">Entry ($)</label>
+            <input id="idea-entry" type="number" step="any" min="0.01" required placeholder="135.70" class="w-full px-3 py-2 text-sm font-mono rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label for="idea-target" class="block text-xs font-medium text-slate-300 mb-1">Target ($)</label>
+            <input id="idea-target" type="number" step="any" min="0.01" required placeholder="152.00" class="w-full px-3 py-2 text-sm font-mono rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label for="idea-stop" class="block text-xs font-medium text-slate-300 mb-1">Stop Loss ($)</label>
+            <input id="idea-stop" type="number" step="any" min="0.01" required placeholder="128.50" class="w-full px-3 py-2 text-sm font-mono rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+          <span class="text-slate-400">Calculated Risk / Reward:</span>
+          <span id="modal-rr-preview" class="font-mono font-bold text-cyan-400">--</span>
+        </div>
+
+        <div>
+          <label for="idea-thesis" class="block text-xs font-medium text-slate-300 mb-1">Trade Thesis & Key Levels</label>
+          <textarea id="idea-thesis" rows="3" required placeholder="Outline your technical setup, catalysts, and invalidation..." class="w-full px-3 py-2 text-sm rounded-xl bg-slate-900 border border-slate-700 text-white focus:outline-none focus:border-emerald-500"></textarea>
+        </div>
+
+        <div id="compose-error" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/25 rounded-lg px-3 py-2"></div>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button type="button" id="cancel-compose-btn" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 transition-colors">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-950 bg-emerald-500 hover:bg-emerald-400 transition-colors">Publish Idea</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 border border-emerald-500/40 text-sm font-medium text-white shadow-xl">
+    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toast-msg">Saved</span>
+  </div>
+
+  <script>
+    // --- Grounded Market Data (Nov 23, 2026) ---
+    const MARKET_DATA = {
+      NVDA: {
+        symbol: 'NVDA',
+        name: 'NVIDIA Corp.',
+        category: 'Stocks',
+        price: 135.71,
+        changePct: -7.04,
+        highLabel: '$142.41',
+        lowLabel: '$125.14',
+        rangeLabel: '$125.14 – $142.41',
+        history: [148.20, 146.50, 145.98, 143.52, 138.90, 129.40, 135.71],
+        labels: ['Nov 15', 'Nov 16', 'Nov 17', 'Nov 18', 'Nov 20', 'Nov 21', 'Nov 23'],
+        bullVotes: 184,
+        bearVotes: 112,
+        userVote: null,
+        inWatchlist: true
+      },
+      AAPL: {
+        symbol: 'AAPL',
+        name: 'Apple Inc.',
+        category: 'Stocks',
+        price: 342.56,
+        changePct: -2.92,
+        highLabel: '$354.34',
+        lowLabel: '$340.56',
+        rangeLabel: '$340.56 – $354.34',
+        history: [346.10, 348.90, 350.40, 352.87, 351.20, 345.10, 342.56],
+        labels: ['Nov 15', 'Nov 16', 'Nov 17', 'Nov 18', 'Nov 20', 'Nov 21', 'Nov 23'],
+        bullVotes: 142,
+        bearVotes: 68,
+        userVote: null,
+        inWatchlist: true
+      },
+      SPY: {
+        symbol: 'SPY',
+        name: 'SPDR S&P 500 ETF',
+        category: 'ETF',
+        price: 703.01,
+        changePct: 1.91,
+        highLabel: '$713.56',
+        lowLabel: '$689.81',
+        rangeLabel: '$689.81 – $713.56',
+        history: [692.40, 694.15, 691.80, 689.81, 696.20, 700.45, 703.01],
+        labels: ['Nov 15', 'Nov 16', 'Nov 17', 'Nov 18', 'Nov 20', 'Nov 21', 'Nov 23'],
+        bullVotes: 215,
+        bearVotes: 95,
+        userVote: null,
+        inWatchlist: true
+      },
+      BTC: {
+        symbol: 'BTC',
+        name: 'Bitcoin / USD',
+        category: 'Crypto',
+        price: 61240.68,
+        changePct: 0.83,
+        highLabel: '$65,435.33',
+        lowLabel: '$55,429.02',
+        rangeLabel: '$55,429 – $65,435',
+        history: [64118.79, 65435.33, 62300.00, 58900.00, 55429.02, 59047.48, 61240.68],
+        labels: ['Nov 16', 'Nov 17', 'Nov 18', 'Nov 19', 'Nov 20', 'Nov 22', 'Nov 23'],
+        bullVotes: 310,
+        bearVotes: 164,
+        userVote: null,
+        inWatchlist: true
+      }
+    };
+
+    const INITIAL_IDEAS = [
+      {
+        id: 'idea-1',
+        author: 'Maya Lin',
+        handle: '@mayatrades',
+        badge: 'Pro Analyst',
+        avatarColor: 'from-emerald-400 to-teal-500',
+        timeAgo: '18m ago',
+        createdAt: 1795437000000,
+        ticker: 'NVDA',
+        direction: 'LONG',
+        category: 'Stocks',
+        entry: 135.71,
+        target: 148.00,
+        stop: 128.50,
+        thesis: 'Strong bounce off the $125.14 intraday low with heavy buyer absorption around $133–$135. Looking for a mean-reversion push back toward the $145.98 prior close gap.',
+        votes: 48,
+        upvoted: false,
+        saved: false,
+        comments: [
+          { author: 'Devon K.', text: 'Watched the $125.14 wick get bought up immediately. Tight stop below $128.50 makes sense.' },
+          { author: 'Samira R.', text: 'Volume profile shows solid support right at $134.' }
+        ]
+      },
+      {
+        id: 'idea-2',
+        author: 'Carlos Vega',
+        handle: '@vegacrypto',
+        badge: 'Macro Desk',
+        avatarColor: 'from-amber-400 to-orange-500',
+        timeAgo: '42m ago',
+        createdAt: 1795435500000,
+        ticker: 'BTC',
+        direction: 'LONG',
+        category: 'Crypto',
+        entry: 61240.68,
+        target: 65400.00,
+        stop: 58400.00,
+        thesis: 'BTC reclaimed $61,200 after sweeping the 7-day low near $55,429. Spot demand is absorbing recent ETF outflows; targeting a retest of the $65,435 weekly high.',
+        votes: 73,
+        upvoted: true,
+        saved: false,
+        comments: [
+          { author: 'Alexei P.', text: 'Clean reclaim of $60k psychological level. Watching funding rates closely.' }
+        ]
+      },
+      {
+        id: 'idea-3',
+        author: 'Elena Rostova',
+        handle: '@erostova',
+        badge: 'Quant Swing',
+        avatarColor: 'from-cyan-400 to-blue-500',
+        timeAgo: '1h ago',
+        createdAt: 1795432000000,
+        ticker: 'AAPL',
+        direction: 'SHORT',
+        category: 'Stocks',
+        entry: 342.56,
+        target: 331.00,
+        stop: 348.50,
+        thesis: 'Failed to hold the $352.87 open and rejected near $354.34 high. If $340.56 intraday support breaks on volume, expecting a drift down to the 20-day EMA.',
+        votes: 31,
+        upvoted: false,
+        saved: false,
+        comments: []
+      },
+      {
+        id: 'idea-4',
+        author: 'Marcus Vance',
+        handle: '@vance_etf',
+        badge: 'Index Flow',
+        avatarColor: 'from-violet-400 to-purple-500',
+        timeAgo: '2h ago',
+        createdAt: 1795428000000,
+        ticker: 'SPY',
+        direction: 'LONG',
+        category: 'ETF',
+        entry: 703.01,
+        target: 713.50,
+        stop: 697.00,
+        thesis: 'SPY holding firmly above $700 (+1.91% vs $689.81 prior close). Breadth is improving across industrials and financials; riding momentum toward the $713.56 open.',
+        votes: 56,
+        upvoted: false,
+        saved: true,
+        comments: [
+          { author: 'Maya Lin', text: '700 call wall is acting as a nice magnet today.' }
+        ]
+      }
+    ];
+
+    const LEADERBOARD_TRADERS = [
+      { id: 't1', name: 'Carlos Vega', handle: '@vegacrypto', specialty: 'Crypto & Macro', winRate: '71%', returnPct: '+44.8%', followers: 1840, following: true, color: 'from-amber-400 to-orange-500' },
+      { id: 't2', name: 'Maya Lin', handle: '@mayatrades', specialty: 'Semis & Tech', winRate: '68%', returnPct: '+38.2%', followers: 2410, following: false, color: 'from-emerald-400 to-teal-500' },
+      { id: 't3', name: 'Marcus Vance', handle: '@vance_etf', specialty: 'Index & Options', winRate: '65%', returnPct: '+29.4%', followers: 1120, following: false, color: 'from-violet-400 to-purple-500' },
+      { id: 't4', name: 'Elena Rostova', handle: '@erostova', specialty: 'Large-Cap Short', winRate: '63%', returnPct: '+24.1%', followers: 890, following: false, color: 'from-cyan-400 to-blue-500' }
+    ];
+
+    const ROOMS_DATA = {
+      'nvda-semis': {
+        id: 'nvda-semis',
+        name: '#nvda-semis',
+        desc: 'Semiconductors, AI capex & earnings flow',
+        online: 142,
+        messages: [
+          { user: 'Maya Lin', time: '18:02', text: 'NVDA holding $135.71 nicely after that dip to $125.14.' },
+          { user: 'Devon K.', time: '18:05', text: 'Watching $138.00 as the next key resistance level.' }
+        ]
+      },
+      'btc-macro': {
+        id: 'btc-macro',
+        name: '#btc-macro',
+        desc: 'Bitcoin spot flows, ETFs & macro liquidity',
+        online: 218,
+        messages: [
+          { user: 'Carlos Vega', time: '17:55', text: 'BTC +0.83% on the day at $61,240.68. Spot bids are stepping up.' },
+          { user: 'Alexei P.', time: '18:04', text: 'If we clear $62.5k, $65.4k is back on the menu.' }
+        ]
+      },
+      'spy-options': {
+        id: 'spy-options',
+        name: '#spy-options',
+        desc: 'SPX / SPY levels, gamma & intraday breadth',
+        online: 96,
+        messages: [
+          { user: 'Marcus Vance', time: '17:48', text: 'SPY at $703.01, well above the $689.81 prior close.' }
+        ]
+      },
+      'swing-setups': {
+        id: 'swing-setups',
+        name: '#swing-setups',
+        desc: 'Multi-day charts & risk/reward reviews',
+        online: 84,
+        messages: [
+          { user: 'Elena Rostova', time: '17:40', text: 'Keeping AAPL on watch below $342.56 for a continuation move.' }
+        ]
+      }
+    };
+
+    // --- App State ---
+    const state = {
+      activeView: 'feed',
+      activeSymbol: 'NVDA',
+      tickerFilter: null,
+      filter: 'ALL',
+      sortBy: 'votes',
+      searchQuery: '',
+      ideas: INITIAL_IDEAS,
+      expandedComments: {},
+      traders: LEADERBOARD_TRADERS,
+      activeRoomId: 'nvda-semis',
+      rooms: ROOMS_DATA
+    };
+
+    // Restore saved/upvoted preferences safely
+    try {
+      const savedIds = JSON.parse(localStorage.getItem('alphapulse_saved') || '[]');
+      const upvotedIds = JSON.parse(localStorage.getItem('alphapulse_upvoted') || '[]');
+      state.ideas.forEach((idea) => {
+        if (savedIds.includes(idea.id)) idea.saved = true;
+        if (upvotedIds.includes(idea.id)) idea.upvoted = true;
+      });
+    } catch (e) {
+      // Ignore storage restrictions
+    }
+
+    function persistPrefs() {
+      try {
+        const savedIds = state.ideas.filter(i => i.saved).map(i => i.id);
+        const upvotedIds = state.ideas.filter(i => i.upvoted).map(i => i.id);
+        localStorage.setItem('alphapulse_saved', JSON.stringify(savedIds));
+        localStorage.setItem('alphapulse_upvoted', JSON.stringify(upvotedIds));
+      } catch (e) {
+        // Ignore storage restrictions
+      }
+    }
+
+    // --- Helpers ---
+    function formatPrice(val) {
+      const num = Number(val);
+      if (!Number.isFinite(num)) return '$0.00';
+      return num >= 1000
+        ? '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '$' + num.toFixed(2);
+    }
+
+    function computeRR(entry, target, stop) {
+      const risk = Math.abs(entry - stop);
+      const reward = Math.abs(target - entry);
+      if (!Number.isFinite(risk) || !Number.isFinite(reward) || risk === 0) return 'N/A';
+      return '1:' + (reward / risk).toFixed(2);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      toastMsg.textContent = msg;
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+      }, 2600);
+    }
+
+    // --- Chart.js Instance ---
+    let priceChart = null;
+    function renderChart() {
+      const asset = MARKET_DATA[state.activeSymbol] || MARKET_DATA.NVDA;
+      const isPos = asset.changePct >= 0;
+      const strokeColor = isPos ? '#10b981' : '#f43f5e';
+      const fillColor = isPos ? 'rgba(16, 185, 129, 0.14)' : 'rgba(244, 63, 94, 0.14)';
+
+      document.getElementById('chart-symbol').textContent = asset.symbol;
+      document.getElementById('chart-name').textContent = asset.name;
+      document.getElementById('chart-price').textContent = formatPrice(asset.price);
+      const chEl = document.getElementById('chart-change');
+      chEl.textContent = `${isPos ? '+' : ''}${asset.changePct.toFixed(2)}%`;
+      chEl.className = `text-xs font-semibold px-1.5 py-0.5 rounded ${isPos ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}`;
+      document.getElementById('chart-high').textContent = asset.highLabel;
+      document.getElementById('chart-low').textContent = asset.lowLabel;
+
+      const pillsContainer = document.getElementById('chart-ticker-pills');
+      pillsContainer.innerHTML = Object.keys(MARKET_DATA).map(sym => {
+        const active = sym === state.activeSymbol;
+        return `<button type="button" data-chart-sym="${sym}" class="px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors ${active ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'}">${sym}</button>`;
+      }).join('');
+
+      const ctx = document.getElementById('priceChart').getContext('2d');
+      if (priceChart) {
+        priceChart.data.labels = asset.labels;
+        priceChart.data.datasets[0].data = asset.history;
+        priceChart.data.datasets[0].borderColor = strokeColor;
+        priceChart.data.datasets[0].backgroundColor = fillColor;
+        priceChart.update();
+      } else {
+        priceChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: asset.labels,
+            datasets: [{
+              label: asset.symbol,
+              data: asset.history,
+              borderColor: strokeColor,
+              backgroundColor: fillColor,
+              borderWidth: 2,
+              fill: true,
+              tension: 0.35,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              pointBackgroundColor: strokeColor
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#0f172a',
+                borderColor: '#334155',
+                borderWidth: 1,
+                titleColor: '#94a3b8',
+                bodyColor: '#f8fafc',
+                callbacks: {
+                  label: (ctxItem) => ` ${formatPrice(ctxItem.parsed.y)}`
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: 'rgba(51, 65, 85, 0.25)' },
+                ticks: { color: '#64748b', font: { size: 10 } }
+              },
+              y: {
+                grid: { color: 'rgba(51, 65, 85, 0.25)' },
+                ticks: {
+                  color: '#64748b',
+                  font: { size: 10 },
+                  callback: (v) => v >= 1000 ? '$' + (v / 1000).toFixed(1) + 'k' : '$' + v
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // --- Render Functions ---
+    function renderTickerStrip() {
+      const strip = document.getElementById('ticker-strip');
+      strip.innerHTML = Object.values(MARKET_DATA).map(asset => {
+        const isPos = asset.changePct >= 0;
+        const active = asset.symbol === state.activeSymbol;
+        return `
+          <button type="button" data-strip-sym="${asset.symbol}" class="shrink-0 flex items-center gap-2.5 px-3 py-1 rounded-xl border transition-colors ${active ? 'bg-slate-800/90 border-emerald-500/40' : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700'}">
+            <span class="text-xs font-bold text-white">${asset.symbol}</span>
+            <span class="text-xs font-mono text-slate-300">${formatPrice(asset.price)}</span>
+            <span class="text-[11px] font-semibold ${isPos ? 'text-emerald-400' : 'text-rose-400'}">${isPos ? '+' : ''}${asset.changePct.toFixed(2)}%</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderPoll() {
+      const asset = MARKET_DATA[state.activeSymbol] || MARKET_DATA.NVDA;
+      const total = asset.bullVotes + asset.bearVotes;
+      const bullPct = total > 0 ? Math.round((asset.bullVotes / total) * 100) : 50;
+      const bearPct = 100 - bullPct;
+
+      document.getElementById('poll-symbol').textContent = asset.symbol;
+      document.getElementById('poll-total').textContent = `${total} votes`;
+      document.getElementById('poll-bull-bar').style.width = `${bullPct}%`;
+      document.getElementById('poll-bear-bar').style.width = `${bearPct}%`;
+      document.getElementById('poll-bull-pct').textContent = `${bullPct}%`;
+      document.getElementById('poll-bear-pct').textContent = `${bearPct}%`;
+
+      const bullBtn = document.getElementById('vote-bull-btn');
+      const bearBtn = document.getElementById('vote-bear-btn');
+      bullBtn.className = `py-2 px-3 rounded-xl text-xs font-semibold border transition-colors flex items-center justify-center gap-1.5 ${asset.userVote === 'bull' ? 'border-emerald-400 bg-emerald-500/30 text-white' : 'border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300'}`;
+      bearBtn.className = `py-2 px-3 rounded-xl text-xs font-semibold border transition-colors flex items-center justify-center gap-1.5 ${asset.userVote === 'bear' ? 'border-rose-400 bg-rose-500/30 text-white' : 'border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300'}`;
+    }
+
+    function renderSidebarLeaders() {
+      const container = document.getElementById('sidebar-leaders');
+      container.innerHTML = state.traders.slice(0, 3).map((t, idx) => `
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="text-xs font-mono text-slate-500 w-3">${idx + 1}</span>
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br ${t.color} flex items-center justify-center text-xs font-bold text-slate-950 shrink-0">${t.name.split(' ').map(n => n[0]).join('')}</div>
+            <div class="min-w-0">
+              <div class="text-xs font-semibold text-white truncate">${t.name}</div>
+              <div class="text-[11px] text-slate-400 truncate">${t.winRate} win • <span class="text-emerald-400 font-medium">${t.returnPct}</span></div>
+            </div>
+          </div>
+          <button type="button" data-follow-id="${t.id}" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors ${t.following ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25'}">
+            ${t.following ? 'Following' : 'Follow'}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderFeed() {
+      const savedCount = state.ideas.filter(i => i.saved).length;
+      document.getElementById('saved-count').textContent = savedCount;
+
+      const banner = document.getElementById('ticker-filter-banner');
+      if (state.tickerFilter) {
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+        document.getElementById('ticker-filter-label').textContent = state.tickerFilter;
+      } else {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+      }
+
+      const q = state.searchQuery.trim().toLowerCase();
+      let filtered = state.ideas.filter(idea => {
+        if (state.tickerFilter && idea.ticker !== state.tickerFilter) return false;
+        if (state.filter === 'LONG' && idea.direction !== 'LONG') return false;
+        if (state.filter === 'SHORT' && idea.direction !== 'SHORT') return false;
+        if (['Stocks', 'Crypto', 'ETF'].includes(state.filter) && idea.category !== state.filter) return false;
+        if (state.filter === 'SAVED' && !idea.saved) return false;
+        if (q) {
+          const hay = `${idea.ticker} ${idea.author} ${idea.handle} ${idea.thesis}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if (state.sortBy === 'votes') {
+        filtered.sort((a, b) => b.votes - a.votes);
+      } else if (state.sortBy === 'newest') {
+        filtered.sort((a, b) => b.createdAt - a.createdAt);
+      } else if (state.sortBy === 'comments') {
+        filtered.sort((a, b) => b.comments.length - a.comments.length);
+      }
+
+      const list = document.getElementById('ideas-list');
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div class="glass-card rounded-2xl p-8 text-center space-y-2">
+            <p class="text-sm font-semibold text-white">No trade ideas match your current filter</p>
+            <p class="text-xs text-slate-400">Try clearing your search or posting a new trade setup.</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = filtered.map(idea => {
+        const isLong = idea.direction === 'LONG';
+        const rr = computeRR(idea.entry, idea.target, idea.stop);
+        const commentsOpen = Boolean(state.expandedComments[idea.id]);
+        const initials = idea.author.split(' ').map(w => w[0]).join('').slice(0, 2);
+
+        return `
+          <article class="glass-card rounded-2xl p-4 sm:p-5 space-y-3.5 transition-colors hover:border-slate-700/80">
+            <!-- Header -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br ${idea.avatarColor} flex items-center justify-center text-sm font-bold text-slate-950 shrink-0">${initials}</div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm font-bold text-white">${idea.author}</span>
+                    <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">${idea.badge}</span>
+                  </div>
+                  <div class="text-xs text-slate-400">${idea.handle} • ${idea.timeAgo}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" data-select-ticker="${idea.ticker}" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-colors">${idea.ticker}</button>
+                <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${isLong ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'}">${idea.direction}</span>
+              </div>
+            </div>
+
+            <!-- Thesis -->
+            <p class="text-sm text-slate-200 leading-relaxed">${idea.thesis}</p>
+
+            <!-- Trade Levels Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl px-3 py-2">
+                <span class="text-[11px] text-slate-400 block">Entry</span>
+                <span class="text-xs font-mono font-semibold text-white">${formatPrice(idea.entry)}</span>
+              </div>
+              <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl px-3 py-2">
+                <span class="text-[11px] text-slate-400 block">Target</span>
+                <span class="text-xs font-mono font-semibold text-emerald-400">${formatPrice(idea.target)}</span>
+              </div>
+              <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl px-3 py-2">
+                <span class="text-[11px] text-slate-400 block">Stop Loss</span>
+                <span class="text-xs font-mono font-semibold text-rose-400">${formatPrice(idea.stop)}</span>
+              </div>
+              <div class="bg-slate-900/80 border border-slate-800/80 rounded-xl px-3 py-2">
+                <span class="text-[11px] text-slate-400 block">Risk / Reward</span>
+                <span class="text-xs font-mono font-semibold text-cyan-300">${rr}</span>
+              </div>
+            </div>
+
+            <!-- Actions Bar -->
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+              <div class="flex items-center gap-2">
+                <button type="button" data-upvote-id="${idea.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${idea.upvoted ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-900 text-slate-300 border border-slate-800 hover:text-white'}">
+                  <i data-lucide="arrow-big-up" class="w-4 h-4"></i>
+                  <span>${idea.votes}</span>
+                </button>
+                <button type="button" data-toggle-comments="${idea.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 text-slate-300 border border-slate-800 hover:text-white transition-colors">
+                  <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                  <span>${idea.comments.length}</span>
+                </button>
+              </div>
+              <button type="button" data-save-id="${idea.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${idea.saved ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'}">
+                <i data-lucide="bookmark" class="w-3.5 h-3.5"></i>
+                <span>${idea.saved ? 'Saved' : 'Save'}</span>
+              </button>
+            </div>
+
+            <!-- Comments Drawer -->
+            ${commentsOpen ? `
+              <div class="pt-3 border-t border-slate-800/60 space-y-2.5">
+                ${idea.comments.length > 0 ? idea.comments.map(c => `
+                  <div class="bg-slate-900/70 rounded-xl px-3 py-2 text-xs">
+                    <span class="font-semibold text-white">${c.author}:</span>
+                    <span class="text-slate-300 ml-1">${c.text}</span>
+                  </div>
+                `).join('') : '<p class="text-xs text-slate-500">No replies yet. Start the discussion.</p>'}
+                <form data-comment-form="${idea.id}" class="flex items-center gap-2 pt-1">
+                  <input type="text" required placeholder="Add your take..." class="flex-1 px-3 py-1.5 text-xs rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60" />
+                  <button type="submit" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white">Reply</button>
+                </form>
+              </div>
+            ` : ''}
+          </article>
+        `;
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderWatchlist() {
+      const assets = Object.values(MARKET_DATA);
+      const trackedCount = assets.filter(a => a.inWatchlist).length;
+      document.getElementById('watchlist-count-badge').textContent = `${trackedCount} tracked`;
+
+      document.getElementById('watchlist-tbody').innerHTML = assets.map(a => {
+        const isPos = a.changePct >= 0;
+        return `
+          <tr class="hover:bg-slate-900/50 transition-colors">
+            <td class="py-3 pr-4">
+              <button type="button" data-select-ticker="${a.symbol}" class="text-left group">
+                <div class="font-bold text-white group-hover:text-emerald-400 transition-colors">${a.symbol}</div>
+                <div class="text-xs text-slate-400">${a.name}</div>
+              </button>
+            </td>
+            <td class="py-3 px-3 text-right font-mono font-semibold text-white">${formatPrice(a.price)}</td>
+            <td class="py-3 px-3 text-right font-semibold ${isPos ? 'text-emerald-400' : 'text-rose-400'}">${isPos ? '+' : ''}${a.changePct.toFixed(2)}%</td>
+            <td class="py-3 px-3 text-right font-mono text-xs text-slate-400 hidden sm:table-cell">${a.rangeLabel}</td>
+            <td class="py-3 pl-3 text-right">
+              <div class="inline-flex items-center gap-1.5">
+                <button type="button" data-filter-feed-ticker="${a.symbol}" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200">Ideas</button>
+                <button type="button" data-toggle-watch="${a.symbol}" class="px-2.5 py-1 rounded-lg text-xs font-semibold ${a.inWatchlist ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'bg-slate-900 text-slate-400 border border-slate-700'}">
+                  ${a.inWatchlist ? 'Tracking' : 'Track'}
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderLeaderboard() {
+      document.getElementById('leaderboard-list').innerHTML = state.traders.map((t, idx) => `
+        <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900/70 border border-slate-800/80">
+          <div class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-lg bg-slate-800 flex items-center justify-center text-xs font-bold ${idx === 0 ? 'text-amber-400' : 'text-slate-400'}">#${idx + 1}</span>
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br ${t.color} flex items-center justify-center text-sm font-bold text-slate-950">${t.name.split(' ').map(n => n[0]).join('')}</div>
+            <div>
+              <div class="text-sm font-bold text-white">${t.name} <span class="text-xs font-normal text-slate-400">${t.handle}</span></div>
+              <div class="text-xs text-slate-400">${t.specialty} • ${t.followers.toLocaleString()} followers</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-4 ml-auto">
+            <div class="text-right">
+              <div class="text-xs text-slate-400">Win Rate</div>
+              <div class="text-sm font-mono font-semibold text-white">${t.winRate}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-xs text-slate-400">90D Return</div>
+              <div class="text-sm font-mono font-bold text-emerald-400">${t.returnPct}</div>
+            </div>
+            <button type="button" data-follow-id="${t.id}" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${t.following ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-emerald-500 text-slate-950 hover:bg-emerald-400'}">
+              ${t.following ? 'Following' : 'Follow'}
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderRooms() {
+      const roomsList = document.getElementById('rooms-list');
+      roomsList.innerHTML = Object.values(state.rooms).map(r => {
+        const active = r.id === state.activeRoomId;
+        return `
+          <button type="button" data-room-id="${r.id}" class="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${active ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'}">
+            <span>${r.name}</span>
+            <span class="text-[10px] font-normal text-slate-500">${r.online}</span>
+          </button>
+        `;
+      }).join('');
+
+      const activeRoom = state.rooms[state.activeRoomId];
+      document.getElementById('active-room-name').textContent = activeRoom.name;
+      document.getElementById('active-room-desc').textContent = activeRoom.desc;
+      document.getElementById('active-room-members').textContent = `${activeRoom.online} online`;
+
+      const msgContainer = document.getElementById('room-messages');
+      msgContainer.innerHTML = activeRoom.messages.map(m => `
+        <div class="bg-slate-900/70 border border-slate-800/80 rounded-xl px-3.5 py-2.5">
+          <div class="flex items-center justify-between text-xs mb-1">
+            <span class="font-bold text-white">${m.user}</span>
+            <span class="text-[11px] text-slate-500">${m.time}</span>
+          </div>
+          <p class="text-sm text-slate-200">${m.text}</p>
+        </div>
+      `).join('');
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    }
+
+    function switchView(viewName) {
+      state.activeView = viewName;
+      document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`view-${viewName}`).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        const active = btn.dataset.view === viewName;
+        btn.className = `nav-tab px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${active ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`;
+      });
+      document.getElementById('mobile-nav').classList.add('hidden');
+    }
+
+    function selectSymbol(sym) {
+      if (!MARKET_DATA[sym]) return;
+      state.activeSymbol = sym;
+      renderTickerStrip();
+      renderChart();
+      renderPoll();
+    }
+
+    // --- Event Listeners ---
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTickerStrip();
+      renderChart();
+      renderPoll();
+      renderSidebarLeaders();
+      renderFeed();
+      renderWatchlist();
+      renderLeaderboard();
+      renderRooms();
+      if (window.lucide) lucide.createIcons();
+
+      // Nav tabs
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.addEventListener('click', () => switchView(btn.dataset.view));
+      });
+      document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+        document.getElementById('mobile-nav').classList.toggle('hidden');
+      });
+      document.getElementById('view-all-leaders-btn').addEventListener('click', () => switchView('leaderboard'));
+
+      // Search & Sort
+      document.getElementById('search-input').addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        if (state.activeView !== 'feed') switchView('feed');
+        renderFeed();
+      });
+      document.getElementById('sort-select').addEventListener('change', (e) => {
+        state.sortBy = e.target.value;
+        renderFeed();
+      });
+
+      // Filter pills
+      document.getElementById('filter-pills').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-filter]');
+        if (!btn) return;
+        state.filter = btn.dataset.filter;
+        document.querySelectorAll('.filter-pill').forEach(p => {
+          const active = p.dataset.filter === state.filter;
+          p.className = `filter-pill px-3 py-1.5 rounded-lg text-xs transition-colors ${active ? 'font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'font-medium text-slate-400 hover:text-white bg-slate-900/80 border border-slate-800'}`;
+        });
+        renderFeed();
+      });
+
+      document.getElementById('clear-ticker-filter').addEventListener('click', () => {
+        state.tickerFilter = null;
+        renderFeed();
+      });
+
+      // Ticker strip & chart pills
+      document.getElementById('ticker-strip').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-strip-sym]');
+        if (btn) selectSymbol(btn.dataset.stripSym);
+      });
+      document.getElementById('chart-ticker-pills').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-chart-sym]');
+        if (btn) selectSymbol(btn.dataset.chartSym);
+      });
+
+      // Sentiment Poll
+      document.getElementById('vote-bull-btn').addEventListener('click', () => {
+        const asset = MARKET_DATA[state.activeSymbol];
+        if (asset.userVote === 'bull') return;
+        if (asset.userVote === 'bear') asset.bearVotes--;
+        asset.bullVotes++;
+        asset.userVote = 'bull';
+        renderPoll();
+        showToast(`Voted Bullish on ${asset.symbol}`);
+      });
+      document.getElementById('vote-bear-btn').addEventListener('click', () => {
+        const asset = MARKET_DATA[state.activeSymbol];
+        if (asset.userVote === 'bear') return;
+        if (asset.userVote === 'bull') asset.bullVotes--;
+        asset.bearVotes++;
+        asset.userVote = 'bear';
+        renderPoll();
+        showToast(`Voted Bearish on ${asset.symbol}`);
+      });
+
+      // Delegated Feed Actions (Upvote, Save, Comments, Ticker click)
+      document.getElementById('ideas-list').addEventListener('click', (e) => {
+        const upBtn = e.target.closest('[data-upvote-id]');
+        if (upBtn) {
+          const idea = state.ideas.find(i => i.id === upBtn.dataset.upvoteId);
+          if (idea) {
+            idea.upvoted = !idea.upvoted;
+            idea.votes += idea.upvoted ? 1 : -1;
+            persistPrefs();
+            renderFeed();
+          }
+          return;
+        }
+        const saveBtn = e.target.closest('[data-save-id]');
+        if (saveBtn) {
+          const idea = state.ideas.find(i => i.id === saveBtn.dataset.saveId);
+          if (idea) {
+            idea.saved = !idea.saved;
+            persistPrefs();
+            renderFeed();
+            showToast(idea.saved ? 'Idea saved to bookmarks' : 'Removed from bookmarks');
+          }
+          return;
+        }
+        const cmtBtn = e.target.closest('[data-toggle-comments]');
+        if (cmtBtn) {
+          const id = cmtBtn.dataset.toggleComments;
+          state.expandedComments[id] = !state.expandedComments[id];
+          renderFeed();
+          return;
+        }
+        const tickerBtn = e.target.closest('[data-select-ticker]');
+        if (tickerBtn) {
+          const sym = tickerBtn.dataset.selectTicker;
+          if (MARKET_DATA[sym]) selectSymbol(sym);
+          state.tickerFilter = sym;
+          renderFeed();
+        }
+      });
+
+      document.getElementById('ideas-list').addEventListener('submit', (e) => {
+        const form = e.target.closest('[data-comment-form]');
+        if (!form) return;
+        e.preventDefault();
+        const input = form.querySelector('input');
+        const text = input.value.trim();
+        if (!text) return;
+        const idea = state.ideas.find(i => i.id === form.dataset.commentForm);
+        if (idea) {
+          idea.comments.push({ author: 'You', text });
+          renderFeed();
+          showToast('Reply posted');
+        }
+      });
+
+      // Watchlist Actions
+      document.getElementById('watchlist-tbody').addEventListener('click', (e) => {
+        const toggleBtn = e.target.closest('[data-toggle-watch]');
+        if (toggleBtn) {
+          const asset = MARKET_DATA[toggleBtn.dataset.toggleWatch];
+          if (asset) {
+            asset.inWatchlist = !asset.inWatchlist;
+            renderWatchlist();
+            showToast(asset.inWatchlist ? `Tracking ${asset.symbol}` : `Untracked ${asset.symbol}`);
+          }
+          return;
+        }
+        const feedBtn = e.target.closest('[data-filter-feed-ticker]');
+        if (feedBtn) {
+          state.tickerFilter = feedBtn.dataset.filterFeedTicker;
+          selectSymbol(state.tickerFilter);
+          switchView('feed');
+          renderFeed();
+          return;
+        }
+        const selBtn = e.target.closest('[data-select-ticker]');
+        if (selBtn) selectSymbol(selBtn.dataset.selectTicker);
+      });
+
+      // Follow Toggles (Sidebar + Leaderboard)
+      function handleFollowClick(e) {
+        const btn = e.target.closest('[data-follow-id]');
+        if (!btn) return;
+        const trader = state.traders.find(t => t.id === btn.dataset.followId);
+        if (trader) {
+          trader.following = !trader.following;
+          trader.followers += trader.following ? 1 : -1;
+          renderSidebarLeaders();
+          renderLeaderboard();
+          showToast(trader.following ? `Following ${trader.name}` : `Unfollowed ${trader.name}`);
+        }
+      }
+      document.getElementById('sidebar-leaders').addEventListener('click', handleFollowClick);
+      document.getElementById('leaderboard-list').addEventListener('click', handleFollowClick);
+
+      // Rooms
+      document.getElementById('rooms-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-room-id]');
+        if (!btn) return;
+        state.activeRoomId = btn.dataset.roomId;
+        renderRooms();
+      });
+      document.getElementById('room-chat-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('room-chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+        const now = new Date();
+        const time = now.toTimeString().slice(0, 5);
+        state.rooms[state.activeRoomId].messages.push({ user: 'You', time, text });
+        input.value = '';
+        renderRooms();
+      });
+
+      // Compose Modal
+      const modal = document.getElementById('compose-modal');
+      function openModal() {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.getElementById('compose-error').classList.add('hidden');
+      }
+      document.getElementById('open-compose-btn').addEventListener('click', openModal);
+      document.getElementById('close-compose-btn').addEventListener('click', closeModal);
+      document.getElementById('cancel-compose-btn').addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      function updateModalRR() {
+        const entry = parseFloat(document.getElementById('idea-entry').value);
+        const target = parseFloat(document.getElementById('idea-target').value);
+        const stop = parseFloat(document.getElementById('idea-stop').value);
+        document.getElementById('modal-rr-preview').textContent = (entry > 0 && target > 0 && stop > 0)
+          ? computeRR(entry, target, stop)
+          : '--';
+      }
+      ['idea-entry', 'idea-target', 'idea-stop'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateModalRR);
+      });
+
+      document.getElementById('compose-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const ticker = document.getElementById('idea-ticker').value.trim().toUpperCase();
+        const direction = document.getElementById('idea-direction').value;
+        const category = document.getElementById('idea-category').value;
+        const entry = parseFloat(document.getElementById('idea-entry').value);
+        const target = parseFloat(document.getElementById('idea-target').value);
+        const stop = parseFloat(document.getElementById('idea-stop').value);
+        const thesis = document.getElementById('idea-thesis').value.trim();
+        const errBox = document.getElementById('compose-error');
+
+        if (!ticker || !thesis || !(entry > 0) || !(target > 0) || !(stop > 0) || entry === stop) {
+          errBox.textContent = 'Please enter a valid ticker, thesis, and distinct positive entry, target, and stop prices.';
+          errBox.classList.remove('hidden');
+          return;
+        }
+
+        state.ideas.unshift({
+          id: 'idea-' + Date.now(),
+          author: 'You',
+          handle: '@trader',
+          badge: 'Member',
+          avatarColor: 'from-cyan-400 to-emerald-400',
+          timeAgo: 'Just now',
+          createdAt: Date.now(),
+          ticker,
+          direction,
+          category,
+          entry,
+          target,
+          stop,
+          thesis,
+          votes: 1,
+          upvoted: true,
+          saved: false,
+          comments: []
+        });
+
+        e.target.reset();
+        updateModalRR();
+        closeModal();
+        switchView('feed');
+        renderFeed();
+        showToast(`Published ${ticker} ${direction} idea`);
+      });
+    });
+  </script>
+</body>
+</html>
